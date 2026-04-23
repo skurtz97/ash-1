@@ -1,0 +1,3 @@
+---
+- name: Import security playbook
+  ansible.builtin.import_playbook: security.yml

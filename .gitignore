@@ -1,21 +1,4 @@
 # The default root path for Ansible config files on the controller
 .ansible/
-
-# Execution retries (even if disabled in cfg, good practice to include)
 *.retry
-
-# Ansible Vault password files (CRITICAL to ignore)
-.vault_pass
-.vault_password
 .vault-pass
-.vault-password
-
-# Python virtual environments & cache
-.venv/
-venv/
-__pycache__/
-*.pyc
-
-# Editor & OS stuff
-.vscode/
-.DS_Store
