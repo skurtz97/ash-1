@@ -7,6 +7,8 @@
 # Ansible Vault password files (CRITICAL to ignore)
 .vault_pass
 .vault_password
+.vault-pass
+.vault-password
 
 # Python virtual environments & cache
 .venv/
