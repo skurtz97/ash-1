@@ -7,5 +7,5 @@ all:
       hosts:
         ash-1:
           ansible_host: "{{ ash_1_ip }}"
-          ansible_user: root
+          ansible_user: "{{ ash_1_user }}"
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519_hetzner
