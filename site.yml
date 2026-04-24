@@ -1,3 +1,14 @@
 ---
+# Code Owner: Sean Kurtz
+#
+# Main entrypoint for the ash-1 server configuration. Imports all
+# playbooks in the correct order. Run this file for a full provision
+# or re-run to converge the server to its desired state.
+#
+# First run: ensure vault contains root credentials for bootstrap.
+# Subsequent runs: bootstrap is idempotent and safe to re-run.
+#
+- name: Bootstrap server 
+  ansible.builtin.import_playbook: bootstrap.yml
 - name: Import security playbook
   ansible.builtin.import_playbook: security.yml

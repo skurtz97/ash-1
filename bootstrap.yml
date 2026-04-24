@@ -1,0 +1,45 @@
+---
+# Code Owner: Sean Kurtz
+#
+# First-time server provisioning playbook. Runs as root and is intended
+# to be executed once on a freshly provisioned Hetzner server. Creates
+# the administrative user, configures passwordless sudo, sets up SSH
+# key authentication, and creates service accounts.
+#
+# After this playbook succeeds, root SSH access is no longer needed.
+#
+- name: Bootstrap server
+  hosts: ash-1
+  gather_facts: true
+  remote_user: root
+  become: false
+  port: "{{ ash_1_ssh_port }}"
+
+  tasks:
+    - name: Create administrative user
+      ansible.builtin.user:
+        name: skurtz
+        groups: wheel,systemd-journal,adm
+        append: true
+        shell: /bin/bash
+        create_home: true
+
+    - name: Configure passwordless sudo for admin user
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/{{ ash_1_user }}
+        line: '{{ ash_1_user }} ALL=(ALL) NOPASSWD: ALL'
+        create: true
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: Set up authorized keys for admin user
+      ansible.posix.authorized_key:
+        user: "{{ ash_1_user }}"
+        state: present
+        key: "{{ lookup('file', ash_1_key + '.pub') }}"
+
+    - name: Create service users
+      ansible.builtin.user:
+        name: nest
+        shell: /bin/bash
+        create_home: true

@@ -1,86 +1,70 @@
 ---
-- name: User setup and infrastructure security
+# Code Owner: Sean Kurtz
+#
+# Hardens the security of a Fedora 43 server provisidoned
+# via Hetzner, but this same basic schema should work for all cloud
+# providers. These are all just general best practices for security
+# on a modern Linux distro.
+#
+- name: Infrastructure security hardening
   hosts: ash-1
   gather_facts: true
-  # Note: Initially run this as root. After it succeeds, you'll switch
-  # your inventory to use the administrative account.
-  remote_user: root
+  become: true
+  port: "{{ ash_1_ssh_port }}"
 
   tasks:
+    - name: Disable root SSH login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+    
+    - name: Disable password authentication
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
 
-   # ── Users ────────────────────────────────────────────────────────
-   - name: Create administrative user
-     ansible.builtin.user:
-      name: skurtz
-      group: wheel
-      append: true
-      shell: /bin/bash
-      create_home: true
+    - name: Ensure pubkey authentication is enabled
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+    
+    - name: Restrict SSH access to admin user only
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?AllowUsers'
+        line: 'AllowUsers {{ ash_1_user }}'
 
-   - name: Setup authorized keys for skurtz
-     ansible.posix.authorized_key:
-      user: skurtz
-      state: present
-      key: "{{ lookup('file', '~/.ssh/id_ed25519_hetzner.pub') }}"
+    - name: Restart sshd to apply hardening
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
 
-   - name: Create project service user (nest)
-     ansible.builtin.user:
-      name: nest
-      shell: /bin/bash
-      create_home: true
+    - name: Ensure firewalld is installed
+      ansible.builtin.dnf:
+        name: firewalld
+        state: present
 
+    - name:
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true 
+    
+    - name: Remove SSH from the public zone
+      ansible.posix.firewalld:
+        zone: public
+        service: ssh
+        state: disabled
+        permanent: true
+        immediate: true
 
-  # ── SSH hardening ─────────────────────────────────────────────────
-
-   - name: Disable root SSH login
-     ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^#?PermitRootLogin'
-      line: 'PermitRootLogin no'
-
-   - name: Disable password authentication
-     ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^#?PasswordAuthentication'
-      line: 'PasswordAuthentication no'
-
-
-   - name: Restrict SSH access to skurtz only
-     ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^#?AllowUsers'
-      line: 'AllowUsers skurtz'
-
-   - name: Restart SSHD to apply hardening
-     ansible.builtin.service:
-      name: sshd
-      state: restarted
-
-  # ── Firewall ─────────────────────────────────────────────────────-
-
-   - name: Ensure firewalld is installed
-     ansible.builtin.dnf:
-      name: firewalld
-      state: present
-
-   - name: Ensure firewalld is started and enabled
-     ansible.builtin.service:
-      name: firewalld
-      state: started
-      enabled: true
-
-   - name: Remove SSH from the public zone
-     ansible.posix.firewalld:
-      zone: public
-      service: ssh
-      state: disabled
-      permanent: true
-      immediate: true
-
-   - name: Assign tailscale0 to the trusted zone
-     ansible.posix.firewalld:
-      zone: trusted
-      interface: tailscale0
-      state: enabled
-      permanent: true
-      immediate: true
+    - name: Assign tailscale0 to the trusted zone
+      ansible.posix.firewalld:
+        zone: trusted
+        interface: tailscale0
+        state: enabled
+        permanent: true
+        immediate: true

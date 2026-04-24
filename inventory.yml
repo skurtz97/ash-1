@@ -1,4 +1,10 @@
 ---
+# Code Owner: Sean Kurtz
+#
+# Defines variables that will potentially be used
+# throughout the file. We need an inventory to run so it is here
+# even though it seems redundant.
+#
 all:
   vars:
     ansible_python_interpreter: /usr/bin/python3
@@ -8,4 +14,4 @@ all:
         ash-1:
           ansible_host: "{{ ash_1_ip }}"
           ansible_user: "{{ ash_1_user }}"
-          ansible_ssh_private_key_file: ~/.ssh/id_ed25519_hetzner
+          ansible_ssh_private_key_file: "{{ ash_1_key }}"
