@@ -16,26 +16,26 @@
     - name: Disable root SSH login
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^#?PermitRootLogin'
-        line: 'PermitRootLogin no'
-    
+        regexp: "^#?PermitRootLogin"
+        line: "PermitRootLogin no"
+
     - name: Disable password authentication
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^#?PasswordAuthentication'
-        line: 'PasswordAuthentication no'
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
 
     - name: Ensure pubkey authentication is enabled
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^#?PubkeyAuthentication'
-        line: 'PubkeyAuthentication yes'
-    
+        regexp: "^#?PubkeyAuthentication"
+        line: "PubkeyAuthentication yes"
+
     - name: Restrict SSH access to admin user only
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^#?AllowUsers'
-        line: 'AllowUsers {{ ash_1_user }}'
+        regexp: "^#?AllowUsers"
+        line: "AllowUsers {{ ash_1_user }}"
 
     - name: Restart sshd to apply hardening
       ansible.builtin.service:
@@ -47,12 +47,12 @@
         name: firewalld
         state: present
 
-    - name:
+    - name: Ensure firewalld is started
       ansible.builtin.service:
         name: firewalld
         state: started
-        enabled: true 
-    
+        enabled: true
+
     - name: Remove SSH from the public zone
       ansible.posix.firewalld:
         zone: public

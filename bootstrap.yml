@@ -11,26 +11,25 @@
 - name: Bootstrap server
   hosts: ash-1
   gather_facts: true
-  remote_user: root
-  become: false
+  remote_user: "{{ ash_1_user }}"
+  become: true
   port: "{{ ash_1_ssh_port }}"
 
   tasks:
     - name: Create administrative user
       ansible.builtin.user:
-        name: skurtz
+        name: "{{ ash_1_user }}"
         groups: wheel,systemd-journal,adm
         append: true
         shell: /bin/bash
         create_home: true
 
     - name: Configure passwordless sudo for admin user
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers.d/{{ ash_1_user }}
-        line: '{{ ash_1_user }} ALL=(ALL) NOPASSWD: ALL'
-        create: true
-        mode: '0440'
-        validate: 'visudo -cf %s'
+      ansible.builtin.user:
+        name: "{{ ash_1_user }}"
+        groups: wheel,systemd-journal,adm
+        append: true
+
 
     - name: Set up authorized keys for admin user
       ansible.posix.authorized_key:
